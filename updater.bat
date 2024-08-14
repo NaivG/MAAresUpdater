@@ -131,19 +131,19 @@ maaupdater\choice -n -c abc >nul
 if errorlevel 3 (
     set server=ghproxy
     set source=https://mirror.ghproxy.com/https://github.com
-    echo %GN%[INFO] %WT%选择了%server%。
+    echo %GN%[INFO] %WT%选择了ghproxy。
     goto :getres
 )
 if errorlevel 2 (
     set server=gitclone
     set source=https://gitclone.com/github.com
-    echo %GN%[INFO] %WT%选择了%server%。
+    echo %GN%[INFO] %WT%选择了gitclone。
     goto :getres
 )
 if errorlevel 1 (
     set server=github
     set source=https://github.com
-    echo %GN%[INFO] %WT%选择了%server%。
+    echo %GN%[INFO] %WT%选择了github。
     goto :getres
 )
 echo %RD%[ERROR] %WT%未知错误，更新失败。

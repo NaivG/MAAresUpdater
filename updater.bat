@@ -50,18 +50,18 @@ echo %GN%[INFO] %WT%检查网络连接中，请稍后...
         set source=https://github.com
         set server=github
     )
-    ping -n 2 gitclone.com>nul
+    ping -n 2 bgithub.xyz>nul
     if errorlevel 0 (
-        set source=https://gitclone.com/github.com
-        set server=gitclone
+        set source=https://bgithub.xyz
+        set server=bgithub.xyz
     )
     ping -n 2 mirror.ghproxy.com>nul
     if errorlevel 0 (
-        set source=https://mirror.ghproxy.com/https://github.com
+        set source=https://ghproxy.net/https://github.com
         set server=ghproxy
     )
     if not defined source (
-        echo %RD%[ERROR] %WT%无法连接到github.com或gitclone.com或mirror.ghproxy.com。请检查网络连接后重试...
+        echo %RD%[ERROR] %WT%无法连接到github.com或bgithub.xyz或ghproxy.net。请检查网络连接后重试...
         goto :end
     )
 echo %GN%[INFO] %WT%自动选择git源%server%

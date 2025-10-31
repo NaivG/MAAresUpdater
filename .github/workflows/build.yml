@@ -1,0 +1,79 @@
+name: Build with Nuitka
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10"]  # 按需指定Python版本
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4.2.2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    # 安装系统依赖
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc python3-dev
+
+    - name: Setup MSVC (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: ilammy/msvc-dev-cmd@v1  # 配置MSVC环境
+
+    - name: Install system dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install gcc
+
+    # 缓存Python依赖
+    - name: Cache pip dependencies
+      uses: actions/cache@v4.2.3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    # 安装项目依赖和Nuitka
+    - name: Install project dependencies
+      run: pip install -r requirements.txt nuitka
+
+    # 编译
+    - name: Compile with Nuitka (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: cmd
+      run: |
+        python -m nuitka --standalone --onefile --assume-yes-for-downloads --output-filename=updater_windows.exe --output-dir=dist updater.py
+
+    - name: Compile with Nuitka (Unix)
+      if: matrix.os != 'windows-latest'
+      shell: bash
+      run: |
+        if [ "${{ matrix.os }}" == "macos-latest" ]; then
+          OUTPUT_NAME="updater_macos.bin"
+        else
+          OUTPUT_NAME="updater_linux"
+        fi
+        python -m nuitka --standalone --onefile --output-filename=$OUTPUT_NAME --output-dir=dist updater.py
+
+    # 上传
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: updater-${{ matrix.os }}
+        path: dist/updater_*
+        if-no-files-found: error

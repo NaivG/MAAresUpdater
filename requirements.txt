@@ -1,0 +1,6 @@
+requests
+psutil
+colorama
+tqdm
+ping3
+prettytable

@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 import json
@@ -115,18 +116,23 @@ def download_file(url, filename):
 
 def main():
     # 检查主程序
-    if not os.path.exists("MAA.exe"):
+    # if not os.path.exists("MAA.exe"):
+    maa_program = ""
+    for filename in ["MAA.exe", "maa", "maa.sh", "MAA.bin"]:
+        if os.path.exists(filename):
+            maa_program = filename
+    if not maa_program or not os.path.isfile(maa_program):
         print_color("[ERROR] 未找到MaaAssistant主程序", Fore.RED)
         return
 
     # 检查依赖
-    missing = check_dependencies()
-    if missing:
-        print_color(f"[ERROR] 缺失依赖文件: {', '.join(missing)}", Fore.RED)
-        return
+    # missing = check_dependencies()
+    # if missing:
+    #     print_color(f"[ERROR] 缺失依赖文件: {', '.join(missing)}", Fore.RED)
+    #     return
 
     # 检查进程
-    if check_process_running("MAA.exe"):
+    if check_process_running(maa_program):
         print_color("[ERROR] 检测到MaaAssistant正在运行", Fore.RED)
         return
 
@@ -189,6 +195,9 @@ def main():
         print_color("[ERROR] 下载失败，请检查网络连接或镜像源", Fore.RED)
         return
 
+    if os.path.exists("MaaResource-main"):
+        shutil.rmtree("MaaResource-main")
+
     # 解压文件
     print_color("[INFO] 校验并解压文件...", Fore.GREEN)
     with zipfile.ZipFile("maares.zip", 'r') as zip_ref:
@@ -205,11 +214,26 @@ def main():
 
     try:
         print_color("[INFO] 解压完成，准备更新资源...", Fore.GREEN)
+
         with open("MaaResource-main/resource/version.json", "r", encoding="utf-8") as f:
             version = json.load(f)
+
         if 'activity' in version:
             print_color(f"当前版本: {version['activity']['name']}", Fore.GREEN)
         print_color(f"资源更新时间: {version['last_updated']}", Fore.GREEN)
+        update_time = datetime.datetime.strptime(version['last_updated'], "%Y-%m-%d %H:%M:%S.%f")
+
+        if os.path.exists("resource/version.json"):
+            with open("resource/version.json", "r", encoding="utf-8") as f:
+                old_version = json.load(f)
+
+            old_update_time = datetime.datetime.strptime(old_version['last_updated'], "%Y-%m-%d %H:%M:%S.%f")
+
+            if old_update_time >= update_time:
+                print_color("[WARNING] 检测到拉取的资源版本旧于本地的版本: " + old_version['last_updated'], Fore.YELLOW)
+                if not input_with_timeout("如果要继续更新，请在5秒内按下任意键...", timeout=5):
+                    return
+                
     except Exception as e:
         print_color(f"[ERROR] 获取版本信息失败: {e}", Fore.RED)
         if not input_with_timeout("如果要继续更新，请在5秒内按下任意键...", timeout=5):
